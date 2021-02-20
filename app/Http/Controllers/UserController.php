@@ -13,13 +13,20 @@ class UserController extends Controller
 {
     public function authenticate(Request $request)
     {
+        //return response()->json($request->all(), 200);
         $credentials = $request->only('email', 'password');
         try {
             if (! $token = JWTAuth::attempt($credentials)) {
-                return response()->json(['error' => 'invalid_credentials'], 400);
+                return response()->json([
+                    'error' => 'invalid_credentials',
+                    'token' => false
+                ], 400);
             }
         } catch (JWTException $e) {
-            return response()->json(['error' => 'could_not_create_token'], 500);
+            return response()->json([
+                'error' => 'could_not_create_token',
+                'token' => false
+            ], 500);
         }
         return response()->json([
             'token' => compact('token'),
@@ -72,5 +79,20 @@ class UserController extends Controller
             'token' => JWTAuth::refresh(),
             'expires_in' => JWTAuth::factory()->getTTL() * 60
         ]);
+    }
+
+    public function logout()
+    {
+        JWTAuth::invalidate();
+        return response()->json([
+            'message' => 'Successfully logged out'
+        ]);
+    }
+
+    public function me()
+    {
+        return response()->json(
+            JWTAuth::user()
+        );
     }
 }
