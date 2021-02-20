@@ -24,6 +24,8 @@ Route::post('login', 'UserController@authenticate');
 Route::group(['middleware' => ['jwt.verify']], function() {
     /*AÑADE AQUI LAS RUTAS QUE QUIERAS PROTEGER CON JWT*/
     Route::get('refresh', 'UserController@refresh');
+    Route::get('logout', 'UserController@logout');
+    Route::get('me', 'UserController@me');
     Route::get('test', function () {
         return 'funciona';
     });
