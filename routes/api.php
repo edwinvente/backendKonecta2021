@@ -26,7 +26,11 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::get('refresh', 'UserController@refresh');
     Route::get('logout', 'UserController@logout');
     Route::get('me', 'UserController@me');
-    Route::get('test', function () {
-        return 'funciona';
-    });
+    Route::get('user/profile', 'UserController@profile');
+    //routes categories
+    Route::resource('categories', 'CategoryController');
+    Route::resource('posts', 'PostController');
+    Route::post('posts/comment', 'PostController@comment');
+    Route::post('posts/comments/{slug}', 'PostController@comments');
 });
+Route::get('/post/file/{filename}', 'PostController@getImage');
