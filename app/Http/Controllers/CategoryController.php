@@ -3,7 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use App\Category;
+use App\Post;
 
 class CategoryController extends Controller
 {
@@ -36,7 +41,33 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $category = new Category();
+        
+        $category->title = $request->input('title');
+        $category->slug = Str::slug($category->title);
+        $category->order = 1;
+
+        $image = $request->file('file');
+        if ($image) {
+            //asignar nombre unico
+            $image_name = time().$image->getClientOriginalName();
+            //guardar en el sotorage carpeta users
+            Storage::disk('categories')->put($image_name, File::get($image));
+            //seteo el valor del usuario activo campo imagen
+            $category->image = $image_name;
+        }
+
+        if ($category->save()) {
+            return response()->json([
+                'post' => $category,
+                'status' => 'success'
+            ], 200);
+        }
+        
+        return response()->json([
+            'post' => null,
+            'status' => 'error'
+        ], 200, $headers);
     }
 
     /**
@@ -45,9 +76,11 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($slug)
     {
-        //
+        $category = Category::where('slug', $slug)->first();
+        $posts = Post::where('category_id', $category->id)->get();
+        return response()->json($posts, 200);
     }
 
     /**

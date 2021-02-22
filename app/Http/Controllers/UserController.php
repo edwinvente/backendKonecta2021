@@ -28,9 +28,13 @@ class UserController extends Controller
                 'token' => false
             ], 500);
         }
+
+        //JWTAuth::setToken('foo.bar.baz');
+        $customClaims = ['user' => JWTAuth::user(), 'expires_in' => JWTAuth::factory()->getTTL() * 60 ];
+        $token = JWTAuth::claims($customClaims)->attempt($credentials);
+
         return response()->json([
-            'token' => compact('token'),
-            'expires_in' => JWTAuth::factory()->getTTL() * 60
+            'token' => $token,
         ]);
     }
 
@@ -52,25 +56,34 @@ class UserController extends Controller
 
     public function register(Request $request)
     {
-            $validator = Validator::make($request->all(), [
+        //return response()->json($request->get('phone'), 200);
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
         if($validator->fails()){
-                return response()->json($validator->errors()->toJson(), 400);
+            return response()->json([
+                'errors' => $validator->errors()->toJson(),
+                'status' => 0
+            ], 400);
         }
 
         $user = User::create([
             'name' => $request->get('name'),
             'email' => $request->get('email'),
+            'phone' => $request->get('phone'),
+            'type_user' => 'Usuario',
             'password' => Hash::make($request->get('password')),
         ]);
 
         $token = JWTAuth::fromUser($user);
 
-        return response()->json(compact('user','token'),201);
+        return response()->json([
+            'data' => compact('user','token'),
+            'status' => 1
+        ],201);
     }
 
     public function refresh()
@@ -94,5 +107,14 @@ class UserController extends Controller
         return response()->json(
             JWTAuth::user()
         );
+    }
+
+    public function profile()
+    {
+        $user = JWTAuth::user();
+        $profile = User::find($user->id);
+        return response()->json([
+            'user' => $profile
+        ], 200);
     }
 }
